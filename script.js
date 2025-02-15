@@ -1071,16 +1071,19 @@ document.addEventListener('DOMContentLoaded', () => {
 // 修改通知功能實現
 async function setupNotifications() {
     try {
-        // 檢查瀏覽器是否支援通知
-        if (!("Notification" in window)) {
-            alert("此瀏覽器不支援通知功能");
+        // 檢查瀏覽器是否支援通知和 Service Worker
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+            alert("您的瀏覽器不支援通知功能");
             return;
         }
 
         const settings = JSON.parse(localStorage.getItem('weatherSettings')) || {};
-        
         if (!settings.notifications) return;
-        
+
+        // 註冊 Service Worker
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        console.log('Service Worker 註冊成功');
+
         // 請求通知權限
         if (Notification.permission === 'default') {
             const permission = await Notification.requestPermission();
@@ -1107,18 +1110,17 @@ async function setupNotifications() {
                         const earthquakeTime = new Date(latestEarthquake.EarthquakeInfo.OriginTime);
                         
                         if (!lastEarthquakeTime || earthquakeTime > lastEarthquakeTime) {
-                            const notification = new Notification('新地震通知', {
+                            // 使用 Service Worker 發送通知
+                            registration.showNotification('新地震通知', {
                                 body: `地點：${latestEarthquake.EarthquakeInfo.Epicenter.Location}\n規模：${latestEarthquake.EarthquakeInfo.EarthquakeMagnitude.MagnitudeValue}\n深度：${latestEarthquake.EarthquakeInfo.FocalDepth}公里`,
                                 icon: '/images/earthquake-icon.png',
                                 badge: '/images/notification-badge.png',
                                 vibrate: [200, 100, 200],
-                                requireInteraction: true
+                                requireInteraction: true,
+                                data: {
+                                    url: window.location.origin
+                                }
                             });
-
-                            notification.onclick = function() {
-                                window.focus();
-                                this.close();
-                            };
 
                             lastEarthquakeTime = earthquakeTime;
                         }
@@ -1126,7 +1128,7 @@ async function setupNotifications() {
                 } catch (error) {
                     console.error('檢查地震更新時發生錯誤:', error);
                 }
-            }, 60000); // 每分鐘檢查一次
+            }, 60000);
         }
     } catch (error) {
         console.error('設置通知時發生錯誤:', error);
@@ -1134,62 +1136,81 @@ async function setupNotifications() {
 }
 
 // 修改測試通知函數
-function testNotification(type) {
-    if (!("Notification" in window)) {
-        alert("此瀏覽器不支援通知功能");
-        return;
-    }
+async function testNotification(type) {
+    try {
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+            alert("您的瀏覽器不支援通知功能");
+            return;
+        }
 
-    if (Notification.permission === 'denied') {
-        alert('通知權限已被封鎖，請在瀏覽器設定中開啟');
-        return;
-    }
+        if (Notification.permission === 'denied') {
+            alert('通知權限已被封鎖，請在瀏覽器設定中開啟');
+            return;
+        }
 
-    if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                showTestNotification(type);
-            } else {
+        const registration = await navigator.serviceWorker.ready;
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
                 alert('需要通知權限才能接收提醒');
+                return;
             }
-        });
-    } else if (Notification.permission === 'granted') {
-        showTestNotification(type);
+        }
+
+        showTestNotification(type, registration);
+    } catch (error) {
+        console.error('測試通知時發生錯誤:', error);
+        alert('無法發送通知，請確認瀏覽器設定');
     }
 }
 
-function showTestNotification(type) {
+async function showTestNotification(type, registration) {
     const notifications = {
         earthquake: {
             title: '地震通知測試',
-            body: '這是一則地震通知測試訊息\n位置：花蓮縣秀林鄉\n規模：6.0\n深度：10公里',
-            icon: '/images/earthquake-icon.png'
+            options: {
+                body: '這是一則地震通知測試訊息\n位置：花蓮縣秀林鄉\n規模：6.0\n深度：10公里',
+                icon: '/images/earthquake-icon.png',
+                badge: '/images/notification-badge.png',
+                vibrate: [200, 100, 200],
+                requireInteraction: true,
+                data: {
+                    url: window.location.origin
+                }
+            }
         },
         typhoon: {
             title: '颱風通知測試',
-            body: '這是一則颱風通知測試訊息\n颱風：小犬\n強度：中度颱風\n距離：500公里',
-            icon: '/images/typhoon-icon.png'
+            options: {
+                body: '這是一則颱風通知測試訊息\n颱風：小犬\n強度：中度颱風\n距離：500公里',
+                icon: '/images/typhoon-icon.png',
+                badge: '/images/notification-badge.png',
+                vibrate: [200, 100, 200],
+                requireInteraction: true,
+                data: {
+                    url: window.location.origin
+                }
+            }
         },
         tsunami: {
             title: '海嘯通知測試',
-            body: '這是一則海嘯通知測試訊息\n警報等級：黃色警報\n影響區域：東部沿海地區\n預計抵達時間：12:00',
-            icon: '/images/tsunami-icon.png'
+            options: {
+                body: '這是一則海嘯通知測試訊息\n警報等級：黃色警報\n影響區域：東部沿海地區\n預計抵達時間：12:00',
+                icon: '/images/tsunami-icon.png',
+                badge: '/images/notification-badge.png',
+                vibrate: [200, 100, 200],
+                requireInteraction: true,
+                data: {
+                    url: window.location.origin
+                }
+            }
         }
     };
 
     try {
-        const notification = new Notification(notifications[type].title, {
-            body: notifications[type].body,
-            icon: notifications[type].icon,
-            badge: '/images/notification-badge.png',
-            vibrate: [200, 100, 200],
-            requireInteraction: true
-        });
-
-        notification.onclick = function() {
-            window.focus();
-            this.close();
-        };
+        const notification = notifications[type];
+        await registration.showNotification(notification.title, notification.options);
     } catch (error) {
         console.error('顯示通知時發生錯誤:', error);
         alert('無法顯示通知，請確認瀏覽器設定');
