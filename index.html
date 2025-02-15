@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealTech 防災平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span class="material-icons">menu</span>
+            <h3>RealTech 防災平台</h3>
+        </div>
+        <div class="menu-items">
+            <div class="menu-item active">
+                <span class="material-icons">home</span>
+                <span>主頁</span>
+            </div>
+            <div class="menu-item">
+                <span class="material-icons">map</span>
+                <span>天氣地圖</span>
+            </div>
+            <div class="menu-item">
+                <span class="material-icons">settings</span>
+                <span>設定</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="grid-container">
+            <!-- 主要天氣卡片 -->
+            <div class="weather-card main-card">
+                <div class="search-box">
+                    <input type="text" placeholder="搜尋城市..." id="search-input">
+                    <button id="search-btn">
+                        <span class="material-icons">search</span>
+                    </button>
+                </div>
+                
+                <div class="weather-info">
+                    <h2 class="city">台北市</h2>
+                    <div class="temperature">
+                        <span id="temp">24</span>°C
+                    </div>
+                    <div class="weather-icon">
+                        <img src="" alt="天氣圖標" id="weather-icon">
+                    </div>
+                    <div class="description">晴天</div>
+                    
+                    <div class="details">
+                        <div class="detail-item">
+                            <span class="material-icons">water_drop</span>
+                            <div>
+                                <p>濕度</p>
+                                <p id="humidity">65%</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="material-icons">air</span>
+                            <div>
+                                <p>風速</p>
+                                <p id="wind-speed">5.2 km/h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 未來預報卡片 -->
+            <div class="weather-card forecast-card">
+                <h3>未來預報</h3>
+                <div class="forecast-container" id="forecast-container">
+                    <!-- 由 JavaScript 動態填充 -->
+                </div>
+            </div>
+
+            <!-- 空氣品質卡片 -->
+            <div class="weather-card aqi-card">
+                <h3>空氣品質</h3>
+                <div class="aqi-info">
+                    <div class="aqi-value" id="aqi-value">--</div>
+                    <div class="aqi-status" id="aqi-status">載入中...</div>
+                    <div class="aqi-details">
+                        <div class="aqi-item">
+                            <span>PM2.5</span>
+                            <span id="pm25">-- µg/m³</span>
+                        </div>
+                        <div class="aqi-item">
+                            <span>PM10</span>
+                            <span id="pm10">-- µg/m³</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日出日落卡片 - 添加 small-card 類別 -->
+            <div class="weather-card sun-card small-card">
+                <h3>日出日落</h3>
+                <div class="sun-info">
+                    <div class="sun-item">
+                        <span class="material-icons">wb_sunny</span>
+                        <div>
+                            <p>日出</p>
+                            <p id="sunrise">06:15</p>
+                        </div>
+                    </div>
+                    <div class="sun-item">
+                        <span class="material-icons">nights_stay</span>
+                        <div>
+                            <p>日落</p>
+                            <p id="sunset">18:30</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 海嘯資訊卡片 -->
+            <div class="weather-card tsunami-card">
+                <h3>海嘯資訊</h3>
+                <div class="tsunami-info">
+                    <div class="tsunami-status" id="tsunami-status">載入中...</div>
+                    <div class="tsunami-details" id="tsunami-details">
+                        <div class="tsunami-item">
+                            <span class="material-icons">warning</span>
+                            <div class="tsunami-content" id="tsunami-content">
+                                <!-- 由 JavaScript 動態填充 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 地震報告卡片 -->
+            <div class="earthquake-card weather-card">
+                <div class="earthquake-header-section">
+                    <h3>最新地震報告</h3>
+                    <div class="earthquake-actions">
+                        <button class="history-btn" title="歷史紀錄">
+                            <span class="material-icons">history</span>
+                        </button>
+                        <button class="alert-btn" title="設定警報">
+                            <span class="material-icons">notifications</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="earthquake-info">
+                    <div class="earthquake-header">
+                        <span class="earthquake-time"></span>
+                        <span class="earthquake-magnitude"></span>
+                    </div>
+                    <div class="earthquake-location"></div>
+                    <div class="earthquake-details">
+                        <div class="earthquake-depth">
+                            <span>深度</span>
+                            <span class="depth-value"></span>
+                        </div>
+                        <div class="earthquake-intensity">
+                            <span>最大震度</span>
+                            <span class="intensity-value"></span>
+                        </div>
+                    </div>
+                    <div class="earthquake-impact">
+                        <div class="impact-level"></div>
+                        <div class="affected-areas"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 颱風追蹤卡片 -->
+            <div class="weather-card typhoon-card">
+                <div class="typhoon-header">
+                    <h3>颱風動態</h3>
+                    <div class="typhoon-badge"></div>
+                </div>
+                <div class="typhoon-info">
+                    <div class="typhoon-basic">
+                        <div class="typhoon-name"></div>
+                        <div class="typhoon-intensity">
+                            <span class="wind-speed"></span>
+                            <span class="pressure"></span>
+                        </div>
+                    </div>
+                    <div class="typhoon-details">
+                        <div class="movement">
+                            <span class="material-icons">navigation</span>
+                            <span class="direction"></span>
+                            <span class="speed"></span>
+                        </div>
+                        <div class="radius">
+                            <span class="material-icons">radio_button_unchecked</span>
+                            <span class="radius-value"></span>
+                        </div>
+                    </div>
+                    <div class="typhoon-forecast">
+                        <div class="forecast-header">未來路徑預報</div>
+                        <div class="forecast-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
